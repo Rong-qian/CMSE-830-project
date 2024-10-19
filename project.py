@@ -14,7 +14,7 @@ st.title('Project on MPG')
 st.header('Introduction')
 
 st.markdown(
-    'In this project, I will explore two datasets on car. \
+    'In this project, I will explore two datasets on car to provide suggestion for custom wants to buy a used car. \
     They are mpg dataset :https://www.kaggle.com/datasets/uciml/autompg-dataset and 100,000 UK Used Car Data set:https://www.kaggle.com/datasets/adityadesai13/used-car-dataset-ford-and-mercedes?resource=download.\
     The goal of the project is to explore how to find a car with better fuel efficiency and find the tendency of the fuel efficiency with the development of car industry '
 )
@@ -134,9 +134,12 @@ string_columns = df_mpg.select_dtypes(include=[object]).columns
 df_mpg_string = df_mpg[string_columns]
 
 
-st.markdown('By the missing heatmap, the horsepower column has some missing value.\
-            I will use two method to do the imputation. \
-            Before we do the imputation, drawing the heatmap of correlation may help determine which variable is useful')
+st.markdown('By the missing heatmap, the horsepower column has few missing value.\
+            I will use stochastic regression method to do the imputation. \
+            Before implementing the imputation, heatmap of correlation may help determine which variable is useful \
+            It shows the car specifications like weight and acceleration has negatives correlation with mpg. \
+            Also the mpg have positive correlation with year, which show cars with better fuel economy are more popular in market.'
+            )
 plt.figure(figsize=(10, 6))
 heatmap = sns.heatmap(df_mpg_numeric.corr(), annot=True, cmap='coolwarm', vmin=-1, vmax=1)
 st.pyplot(plt)
@@ -384,7 +387,7 @@ df_UK_used = pd.concat([df_UK_used_numeric_scaled, df_UK_used_string.reset_index
 #######################################
 ########### Overview     ###############
 ########################################
-st.markdown('Then I will check is what are in the UK used dataset.\
+st.markdown('This dataset is a more recent dataset records the used car sale in UK for some common brand.\
             Since some features like price in this dataset have a large range, I will present the result after standard scaling.\
             Use the selectbox to explore the information recorded in dataset')
 # Example options for the selectbox
@@ -451,8 +454,8 @@ model_toyota = LinearRegression()
 model_toyota.fit(np.array(df_UK_used_toyota['mileage']).reshape(-1, 1), np.array(df_UK_used_toyota['price']).reshape(-1, 1))  
 X_toyota = np.linspace(df_UK_used_toyota['mileage'].min(), df_UK_used_toyota['mileage'].max(), 100).reshape(-1, 1)
 y_toyota = model_toyota.predict(X_toyota)
-plt.scatter(df_UK_used_toyota['mileage'], df_UK_used_toyota['price'], color='blue', label='Data points')
-plt.plot(X_toyota, y_toyota, color='red', label='Regression line')
+plt.scatter(df_UK_used_toyota['mileage'], df_UK_used_toyota['price'], color='blue', label='toyota Data points')
+plt.plot(X_toyota, y_toyota, color='red', label='toyota Regression line')
 
 model_ford = LinearRegression()
 model_ford.fit(np.array(df_UK_used_ford['mileage']).reshape(-1, 1), np.array(df_UK_used_ford['price']).reshape(-1, 1))  
@@ -468,7 +471,8 @@ st.pyplot(plt)
 #######################################
 ########### Narrative     ###############
 ########################################
-st.subheader('Narrative')
+st.subheader('Conclusion')
 st.markdown('In this dataset, no data is missing. But given price and mileage have very different scale with mpg, I need first scale it.\
-             I compare the residual value of used car from ford(USA) and toyota(Japan).\
-            The conclusion still hold toyota, as a Japan brand, have more MPG. Also, it have more residual value than ford car')
+            I compare the residual value of used car from ford(USA) and toyota(Japan).\
+            The conclusion still hold toyota, as a Japan brand, have more MPG. Also, it have more residual value than ford car in the same mileage\
+            ')
