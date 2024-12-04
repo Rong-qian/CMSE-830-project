@@ -1,5 +1,5 @@
 scikit-learn
-pytorch
+torch
 streamlit
 pandas
 numpy
