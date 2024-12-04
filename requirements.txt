@@ -1,0 +1,8 @@
+scikit-learn
+pytorch
+streamlit
+pandas
+numpy
+seaborn
+matplotlib
+altair
