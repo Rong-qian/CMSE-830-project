@@ -20,16 +20,16 @@ from torch.utils.data import DataLoader, Dataset
 
 
 st.title('Advice for car purchase')
+st.image("images.jpeg")
 
 st.header('Introduction')
 
 st.markdown('Buying a car is not an easy decision because there are so many cars in the market. '
-            'There are many car brands from different countries. '
-            'In this app, I will provide suggestions for customers wanting to buy a used car. '
-            'They are mpg dataset: https://www.kaggle.com/datasets/uciml/autompg-dataset and '
-            '100,000 UK Used Car Dataset: https://www.kaggle.com/datasets/adityadesai13/used-car-dataset-ford-and-mercedes?resource=download. '
+            'They come from different car brands, countries, have different size, performance and look. '
+            'Everyone have different needs and preference for car.'
+            'In this app, you will find suggestions to help you choose a car. '
             'There are many car brands from different countries. Different brands have different technology routes and design principles. '
-            'The MPG dataset involves cars from different countries. Let\'s first choose which country car you want to buy since they are so different in performance and fuel efficiency.')
+            'We will start with the MPG dataset involving cars from different countries. Let\'s first choose which country car you want to buy since considering their performance and fuel efficiency.')
 
 st.header('MPG dataset')
 
@@ -44,9 +44,9 @@ st.subheader('Overview')
 ########################################
 ########### Overview     ###############
 ########################################
-st.markdown('First thing to check is what are in the MPG dataset.\
-            In MPG dataset, there is origin to show where the car comes from and the name of the model.\
-            Others are some features related to the mpg. Use the selectbox to view the relation between different features\
+st.markdown('First thing to check is what are in the MPG(miles per gallon) dataset.\
+            In MPG dataset, it tells you the origin of the car and the name of the model.\
+            Other features included are related to the mpg. Use the select box to view the relation between different features.\
             If two features are the same, the histogram and violin plot will be shown instead.')
 # Example options for the selectbox
 options = ['mpg', 'cylinders', 'displacement', 'horsepower','weight','acceleration','model_year']
@@ -272,6 +272,8 @@ model_japan = LinearRegression()
 model_japan.fit(np.array(df_mpg_japan['horsepower']).reshape(-1, 1), np.array(df_mpg_japan['mpg']).reshape(-1, 1))  
 X_japan = np.linspace(df_mpg_japan['horsepower'].min(), df_mpg_japan['horsepower'].max(), 100).reshape(-1, 1)
 y_japan = model_japan.predict(X_japan)
+
+plt.clf()
 plt.scatter(df_mpg_japan['horsepower'], df_mpg_japan['mpg'], color='blue', label='Data points')
 plt.plot(X_japan, y_japan, color='red', label='Regression line')
 
@@ -284,22 +286,23 @@ plt.plot(X_usa, y_usa, color='black', label='USA Regression line')
 plt.legend()
 plt.xlabel('horsepower')
 plt.ylabel('mpg')
+
 st.pyplot(plt)
 #######################################
 ########### Narrative     ###############
 ########################################
 st.subheader('Conclusion')
-st.markdown('From the visualiztion, it shows mpg is higher when the car have less cylinders, displacement, horsepower and weight. \
-            The tendency for MPG is droping with the year. So I recommend to buy newer cars if you want to save cost on gasoline.\
-            The car in USA is more likely to have a small MGP than cars from Japan and has less horsepower in same MPG. Choose car from US if you presue large horsepower car with larger accelatration')
+st.markdown('From the visualization, it shows mpg is higher when the car has fewer cylinders, displacement, horsepower and weight. \
+            The tendency for MPG is dropping with the year. So I recommend to buy newer cars if you want to save cost on gasoline.\
+            The car in USA is more likely to have a small MGP than cars from Japan and has less horsepower in the same MPG. Choose a car from US if you prefer large horsepower car with larger acceleration')
 
 #######################################
 ###100,000 UK Used Car Dataset##########
 ########################################
 
-st.header('100,000 UK Used Car Dataset')
+st.header('Car brand comparison')
 
-st.markdown('Now, we will use 100,000 UK Used Car Dataset to compare two popular brands, toyota and Ford to help you choose between if you want to buy a used car')
+st.markdown('Now, we will use 100,000 UK Used Car Dataset to compare two popular brands, Toyota and Ford to help you choose between if you want to buy a used car')
 # Read CSV files
 df_ford = pd.read_csv('dataset/ford.csv')
 df_ford["origin"] = "ford"
@@ -423,16 +426,10 @@ st.pyplot(plt)
 #######################################
 ########### Narrative     ###############
 ########################################
-st.subheader('Conclusion')
 st.markdown('I compare the residual value of used car from ford(USA) and toyota(Japan).\
             The conclusion still hold toyota, as a Japan brand, have more MPG. Also, it have more residual value than ford car in the same mileage\
             ')
 
-
-
-
-
-st.title('Choosing a car')
 
 #################################################
 ########### Car resale prediction ###############
@@ -509,7 +506,7 @@ st.subheader('Prediction of carsales')
 
 st.markdown('In carsale dataset, many resales value is missing. There are also few entries missing some of the car specifications \
              But since we want to predict resales value, we can fix it! \
-             A simply prediction is based on MICE, we will ' )
+             A simple prediction is based on MICE, we will use this linear model to fill/predict the missing value. See the comparison in test data ' )
 
 
 ########################################
@@ -547,7 +544,57 @@ st.pyplot(plt)
 ########################################
 #                 MICE                 #
 ########################################
+data = df_carsales_select.copy()
 
+train_features = ["Sales_in_thousands","Price_in_thousands","Engine_size","Horsepower","Wheelbase","Width","Length","Curb_weight","Fuel_capacity","Fuel_efficiency","Power_perf_factor"]
+
+test_features = ['__year_resale_value']
+data = data.replace([np.inf, -np.inf], np.nan)
+data = data.dropna(subset=['__year_resale_value'])
+
+# Split features and target
+X = data[train_features]
+y = data[test_features]
+
+# Split the data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Perform MICE imputation
+mice_imputer = IterativeImputer(random_state=42, max_iter=20)
+X_train_mice = pd.DataFrame(mice_imputer.fit_transform(X_train), 
+                            columns=X_train.columns, index=X_train.index)
+X_test_mice = pd.DataFrame(mice_imputer.transform(X_test), 
+                           columns=X_test.columns, index=X_test.index)
+
+# Train a linear regression model on the MICE imputed data
+lr_mice = LinearRegression()
+lr_mice.fit(X_train_mice, y_train)
+
+# Make predictions and calculate MSE and R2
+y_pred_mice = lr_mice.predict(X_test_mice)
+mse_mice = mean_squared_error(y_test, y_pred_mice)
+r2_mice = r2_score(y_test, y_pred_mice)
+
+print(f"MICE Imputation Results:")
+print(f"Mean Squared Error: {mse_mice:.4f}")
+print(f"R2 Score: {r2_mice:.4f}")
+# Make predictions and calculate MSE and R2
+y_pred_mice = lr_mice.predict(X_test_mice)
+mse_mice = mean_squared_error(y_test, y_pred_mice)
+r2_mice = r2_score(y_test, y_pred_mice)
+
+# Visualize the results
+plt.figure(figsize=(6, 6))
+
+plt.subplot(1, 1, 1)
+plt.scatter(y_test, y_pred_mice, alpha=0.5)
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
+plt.xlabel('Actual resale value')
+plt.ylabel('Predicted resale value')
+plt.title('MICE Imputation: Predicted vs Actual')
+
+plt.tight_layout()
+st.pyplot(plt)
 
 
 ########################################
@@ -555,7 +602,8 @@ st.pyplot(plt)
 ########################################
 st.subheader('SVD decomposition')
 
-st.markdown('Before creating a model, we have too many features to consider. \
+st.markdown('Now let\'s go back to predict the resale price for your dream car. \
+                Before creating a model, we have too many features to consider. \
              Therefore, we can do PCA first to see what features are important \
              ')
 
@@ -805,8 +853,8 @@ if st.session_state['renew']!=0:
     
     
     st.write('By selecting different features, you can compare the different performances of the testing dataset.\
-                 Now you can input features of you dream car, and get a prediction of the resale value. \
-                 Hope it can help you make better decision before purchasing a car. \
+                 Now you can input features of your dream car, and get a prediction of the resale value. \
+                 Hope it can help you make better decisions before purchasing a car. \
                ')
     
     # Title of the app
